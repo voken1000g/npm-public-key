@@ -55,30 +55,43 @@ const vokenAddress = require('@voken/address')
 // console.log('isUncompressed:', isUncompressed)
 
 
-
-const hexCompressed = '0303eb4d533c3870d03c50e6490a628dc77065d8c2b62c22da9b22566b6233bf6f'
-console.log('hexCompressed:', hexCompressed)
-
-
-const bufPublicKey = publicKey.fromHex(hexCompressed)
-// console.log('bufPublicKey:', bufPublicKey)
-console.log(' bufPublicKey:', bufPublicKey.toString('hex'))
-
-
-const bufCompressed = Buffer.from(hexCompressed, 'hex')
-console.log('bufCompressed:', bufCompressed)
-
-// const assertCompressed = publicKey.assertCompressed(bufCompressed)
-// console.log('assertCompressed:', assertCompressed)
-
-const bufCompressedConfirm = publicKey.compress(bufCompressed)
-console.log('bufCompressedConfirm:', bufCompressedConfirm)
-
-const vpub = publicKey.toVPub(bufCompressed)
-console.log('vpub:', vpub)
-
-const address = vokenAddress.fromPublicKey(bufCompressed)
-console.log('address:', address)
+//
+// const hexCompressed = '0303eb4d533c3870d03c50e6490a628dc77065d8c2b62c22da9b22566b6233bf6f'
+// console.log('hexCompressed:', hexCompressed)
+//
+//
+// const bufPublicKey = publicKey.fromHex(hexCompressed)
+// // console.log('bufPublicKey:', bufPublicKey)
+// console.log(' bufPublicKey:', bufPublicKey.toString('hex'))
+//
+//
+// const bufCompressed = Buffer.from(hexCompressed, 'hex')
+// console.log('bufCompressed:', bufCompressed)
+//
+// // const assertCompressed = publicKey.assertCompressed(bufCompressed)
+// // console.log('assertCompressed:', assertCompressed)
+//
+// const bufCompressedConfirm = publicKey.compress(bufCompressed)
+// console.log('bufCompressedConfirm:', bufCompressedConfirm)
+//
+// const vpub = publicKey.toVPub(bufCompressed)
+// console.log('vpub:', vpub)
+//
+// const address = vokenAddress.fromPublicKey(bufCompressed)
+// console.log('address:', address)
 
 // 03d172966187c0a864fe2069d2cbf039eb7169f14821acf5120761f756adaf57c0
 // vpub0F8q55K1gY0aGs7x41MW5jYg77nq2tFh90GtSw8j0WGyEnndNWBV0
+
+// Unknown point format
+// 02007ba15ae1f2d415a6cdb2c6d645dc364253017bbf4bfd59503c824de2119be0
+// 02000eca78980edf9934f72f3db6cbcd320cb3b011d2c1553cd0b2bcd2e0c8018b
+
+const ori = '045eeb3a244d746aadce9b991f57d1d23e76f95d78f75226bbe2010f7b955d5dea3c8fece8c6780eca93ce613b2055bd09937c48e8a9e15ee4c350a1b1e1529f36'
+const buf = Buffer.from(ori, 'hex')
+const rs = publicKey.compress(buf)
+// const de = publicKey.decompress(buf)
+console.log('ori:', ori)
+console.log('buf:', buf)
+console.log('rs:', rs.toString('hex'))
+// console.log('de:', de.toString('hex'))

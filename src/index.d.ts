@@ -11,20 +11,18 @@ export declare function assertUncompressed(input: Buffer): Buffer;
 export declare function fromHex(vpriv: String): Buffer;
 export declare function fromVPub(vpriv: String): Buffer;
 export declare function fromPrivateKey(vpriv: Buffer): Buffer;
+
 export declare function toVPub(input: Buffer): String;
 
 export declare class InvalidStartError extends Error {
   code: String
 }
-
 export declare class InvalidLengthError extends Error {
   code: String
 }
-
 export declare class InvalidPublicKeyError extends Error {
   code: String
 }
-
 export declare class InvalidUncompressedPublicKey extends Error {
   code: String
 }

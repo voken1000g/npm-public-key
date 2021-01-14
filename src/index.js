@@ -2,91 +2,63 @@ const base32 = require('@voken/base32')
 const EC = require('elliptic').ec
 const ec = new EC('secp256k1')
 
+const buf02 = Buffer.from('02', 'hex')
+const buf03 = Buffer.from('03', 'hex')
+const buf04 = Buffer.from('04', 'hex')
+
 const compress = function (input) {
-  const ecKeyPair = ec.keyFromPublic(_compress(input))
-
-  let compressed
-  if (ecKeyPair.getPublic().y.isEven()) {
-    compressed = Buffer.from('02' + ecKeyPair.getPublic().x.toString('hex'), 'hex')
-  } else {
-    compressed = Buffer.from('03' + ecKeyPair.getPublic().x.toString('hex'), 'hex')
-  }
-
-  if (compressed.length !== 33) {
-    throw new InvalidPublicKeyError('Invalid Public Key')
-  }
-
-  return compressed
-}
-
-const _compress = function (input) {
   // if (!Buffer.isBuffer(input)) {
   //   input = Buffer.from(input)
   // }
 
-  let _compressed
+  const start = input.slice(0, 1)
 
   if (input.length === 65) {
-
-    if (input.slice(0, 1).toString('hex') !== '04') {
+    if (!buf04.equals(start)) {
       throw new InvalidStartError('A uncompressed Public Key should start with `04`')
     }
 
     const ecKeyPair = ec.keyFromPublic(input)
-    if (ecKeyPair.getPublic().y.isEven()) {
-      _compressed = Buffer.from('02' + ecKeyPair.getPublic().x.toString('hex'), 'hex')
-    } else {
-      _compressed = Buffer.from('03' + ecKeyPair.getPublic().x.toString('hex'), 'hex')
+    const compressed = Buffer.from(ecKeyPair.pub.encodeCompressed())
+    const decompressed = decompress(compressed)
+    if (input.equals(decompressed)) {
+      return compressed
     }
 
-  } else if (input.length === 33) {
+    throw new InvalidUncompressedPublicKey('Invalid uncompressed Public Key')
+  }
 
-    if (
-      input.slice(0, 1).toString('hex') !== '02'
-      &&
-      input.slice(0, 1).toString('hex') !== '03'
-    ) {
+  if (input.length === 33) {
+    if (!buf02.equals(start) && !buf03.equals(start)) {
       throw new InvalidStartError('A compressed Public Key should start with `02` or `03`')
     }
 
-    _compressed = input
-
-  } else {
-    throw new InvalidLengthError('The length of a Public Key should be `65` or `33`')
+    const ecKeyPair = ec.keyFromPublic(input)
+    return Buffer.from(ecKeyPair.pub.encodeCompressed())
   }
 
-  if (_compressed.length !== 33) {
-    throw new InvalidPublicKeyError('Invalid Public Key')
-  }
-
-  return _compressed
+  throw new InvalidLengthError('The length of a Public Key should be `65` or `33`')
 }
 
 const decompress = function (input) {
   const ecKeyPair = ec.keyFromPublic(compress(input))
-
-  return Buffer.concat([
-    Buffer.from('04', 'hex'),
-    Buffer.from(ecKeyPair.getPublic().x.toString('hex'), 'hex'),
-    Buffer.from(ecKeyPair.getPublic().y.toString('hex'), 'hex'),
-  ])
+  return Buffer.from(ecKeyPair.pub.encode())
 }
 
 const isCompressed = function (input) {
-  return compress(input).equals(input)
+  return input.equals(compress(input))
 }
-
 
 const assertCompressed = function (input) {
   if (!isCompressed(input)) {
-    throw new InvalidUncompressedPublicKey('Invalid compressed Public Key')
+    throw new InvalidCompressedPublicKey('Invalid compressed Public Key')
   }
 
   return input
 }
 
 const isUncompressed = function (input) {
-  return decompress(input).equals(input)
+  return input.equals(decompress(input))
 }
 
 const assertUncompressed = function (input) {
@@ -123,14 +95,8 @@ const fromPrivateKey = function (input) {
   }
 
   const ecKeyPair = ec.keyFromPrivate(input)
-
-  let bufX = Buffer.from(ecKeyPair.getPublic().x.toArray())
-
-  if (ecKeyPair.getPublic().y.isEven()) {
-    return Buffer.concat([Buffer.from('02', 'hex'), bufX])
-  }
-
-  return Buffer.concat([Buffer.from('03', 'hex'), bufX])
+  const bufX = Buffer.from(ecKeyPair.getPublic().x.toArray())
+  return ecKeyPair.getPublic().y.isEven() ? Buffer.concat([buf02, bufX]) : Buffer.concat([buf03, bufX])
 }
 
 const toVPub = function (input) {
@@ -155,11 +121,11 @@ class InvalidLengthError extends Error {
   }
 }
 
-class InvalidPublicKeyError extends Error {
+class InvalidCompressedPublicKey extends Error {
   constructor(message) {
     super(message);
-    this.name = 'InvalidPublicKeyError';
-    this.code = 'INVALID_PUBLIC_KEY'
+    this.name = 'InvalidCompressedPublicKey';
+    this.code = 'INVALID_COMPRESSED_PUBLIC_KEY'
   }
 }
 
@@ -189,4 +155,6 @@ module.exports = {
 
   InvalidStartError: InvalidStartError,
   InvalidLengthError: InvalidLengthError,
+  InvalidCompressedPublicKey: InvalidCompressedPublicKey,
+  InvalidUncompressedPublicKey: InvalidUncompressedPublicKey,
 }
